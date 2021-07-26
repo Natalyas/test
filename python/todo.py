@@ -4,6 +4,7 @@ from task import TaskDAO
 import pymongo
 
 app = Flask('todoapp')
+
 client = pymongo.MongoClient('mongodb://mongodb')
 database = client.todo_list
 tasks_dao = TaskDAO(database)
@@ -36,4 +37,4 @@ def create():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host="0.0.0.0")
