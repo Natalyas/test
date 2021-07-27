@@ -1,0 +1,53 @@
+version: "3"
+services:
+  es-elk:
+    hostname: es-elk
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.13.4
+    container_name: es-elk
+    environment:   
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "discovery.type=single-node"
+    networks:
+      - elk_network
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.13.4
+    hostname: logstash
+    volumes:
+      - ./logstash/pipelines.yml:/usr/share/logstash/config/pipelines.yml
+      - ./logstash/test.conf:/usr/share/logstash/config/test.conf
+    environment:
+      xpack.monitoring.elasticsearch.hosts: "[ \"http://es-elk:9200\" ]"
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    networks:
+      - elk_network
+    depends_on:
+      - es-elk
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:6.8.17
+    container_name: kib-test
+    ports:
+      - 5609:5601
+    environment:
+      ELASTICSEARCH_URL: "http://es-elk:9200"
+    networks:
+      - elk_network
+    depends_on:
+      - es-elk
+      
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:7.13.4
+    hostname: filebeat
+    volumes:
+      - ./filebeat.yml:/etc/filebeat/filebeat.yml
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/containers/:/var/lib/docker/containers/:ro
+    depends_on:
+      - logstash
+    networks:
+      - elk_network
+
+networks:
+  elk_network:
+

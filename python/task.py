@@ -1,15 +1,13 @@
 # coding=utf-8
-import pymongo
 import json
+from elasticsearch import Elasticsearch, RequestsHttpConnection,Urllib3HttpConnection
 from bson import json_util
 from bson.objectid import ObjectId
 
+class TaskDAO(Elasticsearch):
 
-class TaskDAO:
-
-    def __init__(self, database):
+    def __init__(self,database):
         self.database = database
-        self.task_collection = self.database.task
 
     def create(self, data):
         task = {
@@ -17,18 +15,41 @@ class TaskDAO:
             'description': data.get('description'),
             'done': False
         }
+        query = {
+            'query': {
+                "bool": {
+                    "must" : {
+                        "match" : { 'done': False },
+                        "match" : { 'title': data.get('title') },
+                        "match" : { 'description': data.get('description') }
+                    }
+                }
+            }
+        }
 
-        inserted_id = self.task_collection.insert_one(task).inserted_id
-        task = self.task_collection.find_one({ '_id': ObjectId(inserted_id) })
-
+        task = self.database.search(index="test-index", body=query)
         return self.to_json(task)
 
     def list(self):
-        tasks = self.task_collection.find().sort('done', pymongo.ASCENDING)
+        query = {
+            'size' : 10000,
+            'query': {
+                'match_all' : {}
+            }
+        }
+        tasks = self.database.search(index="test-index", body=query)
         return self.to_json(tasks)
 
     def read(self, object_id):
-        task = self.task_collection.find_one({ '_id': ObjectId(object_id)})
+        query = {
+            "query": {
+                "ids" : {
+                    "values" : [ ObjectId(object_id) ]
+                }
+            }
+        }
+        print(self.database.search(index="test-index", body=query))
+        task = self.database.search(index="test-index", body=query)
         return self.to_json(task)
 
     def update(self):

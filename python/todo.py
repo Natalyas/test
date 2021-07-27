@@ -1,14 +1,23 @@
 # coding=utf-8
 from flask import Flask, jsonify, request, abort
 from task import TaskDAO
-import pymongo
+from elasticsearch import Elasticsearch
+
 
 app = Flask('todoapp')
+mapping = {
+    "mappings" : {
+        "properties": {
+            'done': { "type":  "boolean" },
+            'title': { "type":  "text" },
+            'description': { "type":  "text" }
+         }
+    }
+}
 
-client = pymongo.MongoClient('mongodb://mongodb')
-database = client.todo_list
-tasks_dao = TaskDAO(database)
-
+client = Elasticsearch(["es-test:9200"])
+client.indices.create(index="test-index",body=mapping, ignore=400)
+tasks_dao = TaskDAO(client)
 
 @app.route('/tasks')
 def list():

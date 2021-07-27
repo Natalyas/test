@@ -1,0 +1,26 @@
+filebeat.autodiscover:
+  providers:
+    - type: docker
+      templates:
+        - condition:
+            contains:
+              docker.container.name: *
+          config:
+            - type: docker
+              containers.stream: "stdout"
+              containers.ids:
+                - "${data.docker.container.id}"
+    - type: docker
+      templates:
+        - condition:
+            contains:
+              docker.container.name: *
+          config:
+            - type: docker
+              containers.stream: "stderr"
+              containers.ids:
+                - "${data.docker.container.id}"
+
+output.logstash:
+  hosts: ["logstash:5044"]
+

@@ -1,0 +1,6 @@
+server.port: 5601
+
+server.host: 127.0.0.1
+#elasticsearch.hosts: [ "http://es-elk:9200" ]
+elasticsearch.hosts: "http://es-elk:9200"
+

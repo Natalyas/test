@@ -1,0 +1,4 @@
+- pipeline.id: python-elk
+  pipeline.workers: 15
+  path.config: /usr/share/logstash/config/test.conf
+
